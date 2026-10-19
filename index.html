@@ -1,22 +1,138 @@
 
-<!-- NAL FAN CHOICE FRIDAY -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
 
-<div style="width:100%;max-width:1200px;margin:0 auto;">
-  <iframe
-    src="https://nal-fan-choice-friday.bikard.workers.dev/?embed=1"
-    title="NAL Fan Choice Friday Voting"
-    width="100%"
-    height="1000"
-    loading="lazy"
-    style="
-      display:block;
-      width:100%;
-      height:1000px;
-      border:none;
-      border-radius:10px;
-      background:#071327;
-    ">
-  </iframe>
-</div>
+  <meta name="theme-color" content="#08172e">
 
-<!-- END NAL FAN CHOICE FRIDAY -->
+  <meta property="og:title"
+        content="NAL Fan Choice Friday — You Pick the Game">
+
+  <meta property="og:description"
+        content="Vote for the classic NAL game you want to watch Friday on the NAL Network.">
+
+  <title>NAL | Fan Choice Friday</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    if (
+      new URLSearchParams(window.location.search)
+        .get("embed") === "1"
+    ) {
+      document.documentElement.classList.add("embedded");
+    }
+  </script>
+
+  <style>
+    /* Hide navigation when embedded on another website */
+    html.embedded header {
+      display: none !important;
+    }
+
+    html.embedded .hero {
+      padding-top: 30px;
+    }
+
+    /* Keep FAN CHOICE FRIDAY on one line */
+    .hero h1 {
+      white-space: nowrap;
+      font-size: clamp(21px, 7.4vw, 100px);
+    }
+
+    .hero h1 em {
+      display: inline;
+      color: #e21b3c;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="brand">
+      NAL
+      <small>NATIONAL ARENA LEAGUE</small>
+    </div>
+
+    <a href="https://thenationalarenaleague.com">
+      NAL NETWORK ↗
+    </a>
+  </header>
+
+  <main>
+
+    <section class="hero">
+
+      <span class="eyebrow">
+        THE NAL NETWORK PRESENTS
+      </span>
+
+      <h1>FAN CHOICE <em>FRIDAY</em></h1>
+
+      <h2>YOU PICK THE GAME. WE PLAY IT.</h2>
+
+      <p>
+        Choose the classic NAL matchup you want
+        to see this Friday on the NAL Network.
+      </p>
+
+      <div id="timer" class="timer">
+        Loading this week's poll…
+      </div>
+
+    </section>
+
+    <section class="content">
+
+      <h2 id="question">
+        This week's game choices
+      </h2>
+
+      <div id="options" class="options"></div>
+
+      <button id="submit" disabled>
+        SUBMIT YOUR VOTE
+      </button>
+
+      <p id="message" role="status"></p>
+
+      <section
+        id="resultsPanel"
+        class="results-panel"
+        hidden
+        aria-live="polite">
+      </section>
+
+    </section>
+
+  </main>
+
+  <footer>
+
+    <div>
+      FRIDAYS • 12:30 PM EASTERN /
+      11:30 AM CENTRAL • NAL NETWORK
+    </div>
+
+    <div class="powered">
+
+      <span>Powered By:</span>
+
+      <img
+        src="https://cdn.shopify.com/s/files/1/0719/1966/5231/files/Watermark_Small_91fb7f00-6bb5-4cbf-93a0-217d5857d097.png?v=1782379927"
+        alt="MNTR+"
+        loading="lazy">
+
+    </div>
+
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
