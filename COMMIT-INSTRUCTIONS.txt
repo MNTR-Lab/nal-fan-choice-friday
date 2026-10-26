@@ -1,0 +1,25 @@
+Fan Choice Friday — weekly poll controls
+
+The live fcf-api backend has already been updated to version 8.
+
+Replace these two files in MNTR-Lab/nal-fan-choice-friday and commit together:
+  admin.html
+  admin.js
+
+edge-function.ts is included as the matching backend source; commit it too to keep the repository current. No database migration is required.
+
+After the site deployment completes:
+1. Refresh /admin and sign in.
+2. Click DOWNLOAD RESULTS if you want a local copy of the old results.
+3. Click ARCHIVE CURRENT POLL. This closes voting and preserves the matchups and votes.
+4. Click CREATE NEW POLL.
+5. Add 2–4 new games. Video preview links are optional.
+6. Enter opening and closing dates in Eastern Time. Save as draft while preparing.
+7. Set Status to active and SAVE POLL when ready to publish.
+8. Confirm the public page shows the new matchups.
+
+Saved polls lets you reopen earlier polls and download their results.
+
+Monday loading still requires fixing the existing MONDAY_API_TOKEN board access. The live API currently reports that the token cannot access board 18436132233. Give the token owner's Monday account access to that board, or replace that secret with a token from an authorized account. Do not paste the token into frontend files. Manual matchup and thumbnail entry is available in the meantime.
+
+Validation: backend mock integration checks passed for admin authorization, history, preserved vote totals, rejected choice edits without writes, archive preserving rows, and separate zero-vote polls. Browser execution could not run because a Chromium binary is unavailable in this environment. Existing live votes were checked via read-only database queries.

@@ -16,6 +16,8 @@ const TIME_ZONE = "America/New_York";
 
 let access = "";
 let current = null;
+let currentData = null;
+let choicesLocked = false;
 
 const el = (id) => document.getElementById(id);
 
@@ -198,6 +200,8 @@ function addGame(game = {}) {
   for (const [label, value] of fields) {
     const input = document.createElement("input");
 
+    input.disabled = choicesLocked;
+    input.setAttribute("aria-label", label);
     input.placeholder = label;
     input.value = value || "";
 
@@ -213,6 +217,7 @@ function addGame(game = {}) {
   const removeButton = document.createElement("button");
 
   removeButton.textContent = "REMOVE";
+  removeButton.disabled = choicesLocked;
 
   removeButton.onclick = () => {
     container.remove();
@@ -275,8 +280,10 @@ el("signOut").onclick = () => {
    LOAD CURRENT POLL
 ----------------------------------------- */
 
-async function refresh() {
-  const data = await req("/admin/poll");
+async function refresh(id) {
+  const data = await req("/admin/poll" + (id ? "?id=" + id : ""));
+  currentData = data;
+  choicesLocked = (data.results || []).some(r => r.votes > 0) || data.poll?.status === "active";
 
   current = data.poll;
 
@@ -312,6 +319,12 @@ async function refresh() {
     2
   );
 
+  el("pollHeading").textContent = current ? `Poll #${current.id}: ${current.title}` : "New poll";
+  el("pollNotice").textContent = choicesLocked ? "Game choices are locked. Create a new poll for the next week. Results are preserved." : "Draft choices can be edited. Saving as active makes this poll public.";
+  for (const id of ["addGame", "loadLibrary"]) el(id).disabled = choicesLocked;
+  el("archivePoll").disabled = !current || current.status === "closed";
+  el("exportPoll").disabled = !current;
+  await loadHistory();
   // Show the time zone clearly.
   el("opens").title =
     "Eastern Time (America/New_York)";
@@ -432,7 +445,7 @@ el("save").onclick = async () => {
       );
     }
 
-    await req(
+    const saved = await req(
       "/admin/poll",
       {
         id: current?.id,
@@ -446,7 +459,7 @@ el("save").onclick = async () => {
       "POST"
     );
 
-    await refresh();
+    await refresh(saved.id);
 
     el("adminMessage").textContent =
       "Saved successfully. Times are displayed in Eastern Time.";
@@ -458,4 +471,55 @@ el("save").onclick = async () => {
   } finally {
     saveButton.disabled = false;
   }
+};
+
+
+// Weekly polls retain their own choices and votes. No delete/reset actions.
+async function loadHistory() {
+  const data = await req("/admin/polls");
+  el("pollHistory").replaceChildren();
+  for (const p of data.polls || []) {
+    const o = document.createElement("option");
+    o.value = p.id;
+    o.textContent = `#${p.id} · ${p.title} · ${p.status} · ${p.closes_at ? utcToEasternInput(p.closes_at).replace("T", " ") + " ET" : "No close date"}`;
+    el("pollHistory").append(o);
+  }
+  if(current) el("pollHistory").value = current.id;
+}
+el("openPoll").onclick = async () => {
+  try { await refresh(Number(el("pollHistory").value)); el("adminMessage").textContent = "Saved poll loaded."; }
+  catch(e) { el("adminMessage").textContent = e.message; }
+};
+el("archivePoll").onclick = async () => {
+  if(!current) return;
+  const id = current.id;
+  el("archivePoll").disabled = true;
+  try {
+    await req("/admin/archive", {id}, "POST");
+    await refresh(id);
+    el("adminMessage").textContent = "Poll archived. Matchups and votes are preserved. Choose CREATE NEW POLL for next week.";
+  } catch(e) { el("archivePoll").disabled = false; el("adminMessage").textContent = e.message; }
+};
+el("newPoll").onclick = () => {
+  current = null; currentData = null; choicesLocked = false;
+  el("pollHeading").textContent = "New poll — unsaved draft";
+  el("pollNotice").textContent = "This is a separate poll with zero votes. Archive the previous poll using Saved polls if you have not already done so.";
+  el("title").value = "Fan Choice Friday";
+  el("questionInput").value = "Which NAL game should we air this Friday for Fan Choice Friday?";
+  el("opens").value = ""; el("closes").value = "";
+  el("status").value = "draft";
+  el("gameFields").replaceChildren(); el("libraryGames").replaceChildren();
+  el("libraryMessage").textContent = "";
+  el("results").textContent = "No votes — new poll.";
+  for(const id of ["addGame","loadLibrary"]) el(id).disabled = false;
+  for(const id of ["archivePoll","exportPoll"]) el(id).disabled = true;
+  el("pollHistory").selectedIndex = -1;
+  el("adminMessage").textContent = "Add 2–4 games, set the Eastern voting dates, and SAVE POLL. Video preview links are optional.";
+};
+el("exportPoll").onclick = () => {
+  if(!currentData?.poll) return;
+  const blob = new Blob([JSON.stringify(currentData,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = `fan-choice-friday-poll-${current.id}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(url),1000);
 };
